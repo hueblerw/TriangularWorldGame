@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class World {
 
     private const int ROUND_TO = 1;
     private const double MAX_LAYER_NUMBER = 12.0;
     private const double LAYER_TRANSITION = 2.0;
+    private const int STARTING_NATION_CASH = 12000;
 
     public TriangularTile[,] triangularGrid;
     public int[,] hexagonalNumbers;
     public static int worldX;
     public static int worldZ;
     public List<Person> people;
+    public List<Clan> clans;
     public List<Nation> nations;
 
     private LayerGenerator layerGenerator;
@@ -29,9 +32,6 @@ public class World {
             Debug.Log("Invalid world, generating a new one");
             generateWorld();
         }
-
-        Nation nation = new Nation("Jerkland", "Jerkland");
-        this.people = createSettlementPeople(nation);
     }
 
     public void generateWorld()
@@ -63,6 +63,21 @@ public class World {
         info += "Claimed by Nation: " + "none";
         // info += getSettlementInfo(x, z);
         return info;
+    }
+
+    public Nation createANation(string nationName)
+    {
+        Nation nation = new Nation(nationName, nationName);
+        List<Clan> clans = new List<Clan>();
+        this.people = createSettlementPeople(nation, ref clans);
+        distributeWealth(nation, clans);
+        this.clans = clans;
+        return nation;
+    }
+
+    public Clan getClanByName(string clanName)
+    {
+        return clans.Find(clan => clan.clanName.Equals(clanName));
     }
 
     private Vector2 triangularToHexCoordinates(int x, int z)
@@ -284,7 +299,7 @@ public class World {
         return false;
     }
 
-    private List<Person> createSettlementPeople(Nation nation)
+    private List<Person> createSettlementPeople(Nation nation, ref List<Clan> clans)
     {
         List<Person> people = new List<Person>();
         int numOfPeople = randy.Next(7, 13);
@@ -298,10 +313,12 @@ public class World {
         {
             Dictionary<string, Person> parents = new Dictionary<string, Person>();
             Culture culture = nation.primaryCulture;
-            people.Add(Person.newImmigrant(randomName(), randomClanName(i), parents, culture));
+            string clanName = randomClanName(i);
+            people.Add(Person.newImmigrant(randomName(), clanName, parents, culture));
+            clans.Add(new Clan(clanName));
             Debug.Log(people[i]);
         }
-        
+
         return people;
     }
 
@@ -313,6 +330,39 @@ public class World {
     private string randomName()
     {
         return "randomName";
+    }
+
+    private void distributeWealth(Nation nation, List<Clan> clans)
+    {
+        int cashLeft = STARTING_NATION_CASH;
+        List<int> indexesLeft = Enumerable.Range(0, clans.Count + 1).ToList();
+        while(indexesLeft.Count > 1)
+        {
+            int randomIndex = randy.Next(0, indexesLeft.Count);
+            int clanIndex = indexesLeft[randomIndex];
+            int cash = randy.Next(0, cashLeft);
+            if (clanIndex != clans.Count)
+            {
+                clans[clanIndex].earn(cash);
+                Debug.Log(clans[clanIndex]);
+            } else {
+                nation.earn(cash);
+                Debug.Log(nation);
+            }
+            cashLeft -= cash;
+            indexesLeft.Remove(clanIndex);
+        }
+
+        // Assign the remaining money to the last index
+        int index = indexesLeft[0];
+        if (index != clans.Count)
+        {
+            clans[index].earn(cashLeft);
+            Debug.Log(clans[index]);
+        } else {
+            nation.earn(cashLeft);
+            Debug.Log(nation);
+        }
     }
 
 }
