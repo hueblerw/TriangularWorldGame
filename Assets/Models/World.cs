@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class World {
 
     private const int ROUND_TO = 1;
     private const double MAX_LAYER_NUMBER = 12.0;
     private const double LAYER_TRANSITION = 2.0;
+    private const int STARTING_NATION_CASH = 12000;
 
     public TriangularTile[,] triangularGrid;
     public int[,] hexagonalNumbers;
     public static int worldX;
     public static int worldZ;
     public List<Person> people;
+    public List<Clan> clans;
     public List<Nation> nations;
 
     private LayerGenerator layerGenerator;
@@ -29,9 +32,8 @@ public class World {
             Debug.Log("Invalid world, generating a new one");
             generateWorld();
         }
-
-        Nation nation = new Nation("Jerkland", "Jerkland");
-        this.people = createSettlementPeople(nation);
+        this.nations = new List<Nation>();
+        this.nations.Add(createANation("Jerkland"));
     }
 
     public void generateWorld()
@@ -63,6 +65,21 @@ public class World {
         info += "Claimed by Nation: " + "none";
         // info += getSettlementInfo(x, z);
         return info;
+    }
+
+    public Nation createANation(string nationName)
+    {
+        Nation nation = new Nation(nationName, nationName);
+        List<Clan> clans = new List<Clan>();
+        this.people = createSettlementPeople(nation, ref clans);
+        distributeWealth(nation, clans);
+        this.clans = clans;
+        return nation;
+    }
+
+    public Clan getClanByName(string clanName)
+    {
+        return clans.Find(clan => clan.clanName.Equals(clanName));
     }
 
     private Vector2 triangularToHexCoordinates(int x, int z)
@@ -284,11 +301,13 @@ public class World {
         return false;
     }
 
-    private List<Person> createSettlementPeople(Nation nation)
+
+    private List<Person> createSettlementPeople(Nation nation, ref List<Clan> clans)
     {
         List<Person> people = new List<Person>();
         int numOfPeople = randy.Next(7, 13);
         int numOfClans = randy.Next(4, 9);
+        Debug.Log(numOfPeople + " in " + numOfClans);
         if (numOfPeople < numOfClans)
         {
             numOfClans = numOfPeople;
@@ -298,21 +317,104 @@ public class World {
         {
             Dictionary<string, Person> parents = new Dictionary<string, Person>();
             Culture culture = nation.primaryCulture;
-            people.Add(Person.newImmigrant(randomName(), randomClanName(i), parents, culture));
+            string gender = Person.randomGender();
+            string clanName = culture.randomClan();
+            people.Add(Person.newImmigrant(culture.randomName(gender), gender, clanName, parents, culture));
+            clans.Add(new Clan(clanName));
             Debug.Log(people[i]);
         }
-        
+
+        for (int j = numOfClans; j < numOfPeople; j++)
+        {
+            int clanNum = randy.Next(0, numOfClans);
+            Person person = people[clanNum];
+            Debug.Log(person.name + " " + person.clan);
+            // is this person a parent, sibling or child of the leader?
+            int roll = randy.Next(1, 4);
+            if (roll == 1 && (person.getAgeGroup() == "teen" || person.getAgeGroup() == "child" || person.getAgeGroup() == "infant"))
+            {
+                roll++;
+            }
+            if (roll == 3 && person.getAgeGroup() == "elder")
+            {
+                roll--;
+            }
+
+            string gender = Person.randomGender();
+            Dictionary<string, Person> parents = new Dictionary<string, Person>();
+            Culture culture = person.culture;
+
+            // need to limit the age of the new character and understand why the genes are null for person in child case???
+            switch (roll)
+            {
+                case 1:
+                    // child
+                    Debug.Log(person.gender);
+                    if (person.gender == "female")
+                    {
+                        parents["mother"] = person;
+                    } else
+                    {
+                        parents["father"] = person;
+                    }
+                    people.Add(Person.newImmigrant(culture.randomName(gender), gender, person.clan, parents, culture));
+                    break;
+                case 2:
+                    // sibling
+                    people.Add(Person.newImmigrant(culture.randomName(gender), gender, person.clan, parents, culture));
+                    break;
+                case 3:
+                    // parent
+                    Person newPerson = Person.newImmigrant(culture.randomName(gender), gender, person.clan, parents, culture);
+                    people.Add(newPerson);
+                    if (newPerson.gender == "female")
+                    {
+                        person.mother = newPerson.name;
+                    }
+                    else
+                    {
+                        person.father = newPerson.name;
+                    }
+                    break;
+            }
+
+            Debug.Log(people[j]);
+        }
+
         return people;
     }
 
-    private string randomClanName(int i)
+    private void distributeWealth(Nation nation, List<Clan> clans)
     {
-        return "Clan" + i;
-    }
+        int cashLeft = STARTING_NATION_CASH;
+        List<int> indexesLeft = Enumerable.Range(0, clans.Count + 1).ToList();
+        while(indexesLeft.Count > 1)
+        {
+            int randomIndex = randy.Next(0, indexesLeft.Count);
+            int clanIndex = indexesLeft[randomIndex];
+            int cash = randy.Next(0, cashLeft);
+            if (clanIndex != clans.Count)
+            {
+                clans[clanIndex].earn(cash);
+                Debug.Log(clans[clanIndex]);
+            } else {
+                nation.earn(cash);
+                Debug.Log(nation);
+            }
+            cashLeft -= cash;
+            indexesLeft.Remove(clanIndex);
+        }
 
-    private string randomName()
-    {
-        return "randomName";
+        // Assign the remaining money to the last index
+        int index = indexesLeft[0];
+        if (index != clans.Count)
+        {
+            clans[index].earn(cashLeft);
+            Debug.Log(clans[index]);
+        } else {
+            nation.earn(cashLeft);
+            Debug.Log(nation);
+        }
     }
 
 }

@@ -21,6 +21,22 @@ public class Culture {
         assignCulture(name);
     }
 
+    public string randomName(string gender)
+    {
+        string fileText = fetchFileString(nationality + "-" + gender + "-names.txt");
+        string[] names = fileText.Split(',');
+        int index = randy.Next(0, names.Length);
+        return names[index].Trim();
+    }
+
+    public string randomClan()
+    {
+        string fileText = fetchFileString(nationality + "-lastnames.txt");
+        string[] names = fileText.Split(',');
+        int index = randy.Next(0, names.Length);
+        return names[index].Trim();
+    }
+
     public PersonClass randomClass()
     {
         int index = randy.Next(0, 12);
@@ -64,6 +80,11 @@ public class Culture {
     public int randomEyes()
     {
         return randy.Next((int)defaultEyeRange.x, (int)defaultEyeRange.y);
+    }
+
+    private string fetchFileString(string path)
+    {
+        return System.IO.File.ReadAllText("Assets/Data/names/" + path);
     }
 
     private void assignCulture(string name)
