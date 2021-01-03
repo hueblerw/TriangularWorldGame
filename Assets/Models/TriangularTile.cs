@@ -7,6 +7,7 @@ public class TriangularTile {
     public Resource resource;
     public int catanNumber;
     public string developmentLevel;
+    // public Nation owner;
     // public Dictionary<string, Building> buildings;
 
 

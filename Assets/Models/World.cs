@@ -13,7 +13,6 @@ public class World {
     public static int worldX;
     public static int worldZ;
     public List<Person> people;
-    public List<Nation> nations;
 
     private LayerGenerator layerGenerator;
     private System.Random randy = new System.Random();
@@ -30,8 +29,7 @@ public class World {
             generateWorld();
         }
 
-        Nation nation = new Nation("Jerkland", "Jerkland");
-        this.people = createSettlementPeople(nation);
+        this.people = createSettlementPeople();
     }
 
     public void generateWorld()
@@ -284,11 +282,12 @@ public class World {
         return false;
     }
 
-    private List<Person> createSettlementPeople(Nation nation)
+    private List<Person> createSettlementPeople()
     {
         List<Person> people = new List<Person>();
         int numOfPeople = randy.Next(7, 13);
         int numOfClans = randy.Next(4, 9);
+        Debug.Log(numOfPeople + " in " + numOfClans);
         if (numOfPeople < numOfClans)
         {
             numOfClans = numOfPeople;
@@ -297,22 +296,70 @@ public class World {
         for(int i = 0; i < numOfClans; i++)
         {
             Dictionary<string, Person> parents = new Dictionary<string, Person>();
-            Culture culture = nation.primaryCulture;
-            people.Add(Person.newImmigrant(randomName(), randomClanName(i), parents, culture));
+            Culture culture = new Culture("Jerkland");
+            string gender = Person.randomGender();
+            people.Add(Person.newImmigrant(culture.randomName(gender), gender, culture.randomClan(), parents, culture));
             Debug.Log(people[i]);
         }
-        
+
+        for (int j = numOfClans; j < numOfPeople; j++)
+        {
+            int clanNum = randy.Next(0, numOfClans);
+            Person person = people[clanNum];
+            Debug.Log(person.name + " " + person.clan);
+            // is this person a parent, sibling or child of the leader?
+            int roll = randy.Next(1, 4);
+            if (roll == 1 && (person.getAgeGroup() == "teen" || person.getAgeGroup() == "child" || person.getAgeGroup() == "infant"))
+            {
+                roll++;
+            }
+            if (roll == 3 && person.getAgeGroup() == "elder")
+            {
+                roll--;
+            }
+
+            string gender = Person.randomGender();
+            Dictionary<string, Person> parents = new Dictionary<string, Person>();
+            Culture culture = person.culture;
+
+            // need to limit the age of the new character and understand why the genes are null for person in child case???
+            switch (roll)
+            {
+                case 1:
+                    // child
+                    Debug.Log(person.gender);
+                    if (person.gender == "female")
+                    {
+                        parents["mother"] = person;
+                    } else
+                    {
+                        parents["father"] = person;
+                    }
+                    people.Add(Person.newImmigrant(culture.randomName(gender), gender, person.clan, parents, culture));
+                    break;
+                case 2:
+                    // sibling
+                    people.Add(Person.newImmigrant(culture.randomName(gender), gender, person.clan, parents, culture));
+                    break;
+                case 3:
+                    // parent
+                    Person newPerson = Person.newImmigrant(culture.randomName(gender), gender, person.clan, parents, culture);
+                    people.Add(newPerson);
+                    if (newPerson.gender == "female")
+                    {
+                        person.mother = newPerson.name;
+                    }
+                    else
+                    {
+                        person.father = newPerson.name;
+                    }
+                    break;
+            }
+
+            Debug.Log(people[j]);
+        }
+
         return people;
-    }
-
-    private string randomClanName(int i)
-    {
-        return "Clan" + i;
-    }
-
-    private string randomName()
-    {
-        return "randomName";
     }
 
 }
