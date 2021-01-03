@@ -19,7 +19,7 @@ public class Genes {
         this.pigment = culture.randomPigment();
         this.hair = culture.randomHair();
         this.eyes = culture.randomEyes();
-        this.pigment = randy.Next(1, 21);
+        this.beauty = randy.Next(1, 21);
     }
 
     public Genes(Person parent1, Person parent2)
