@@ -30,7 +30,7 @@ public class BaseStats {
         int dice4 = randy.Next(1, 13);
 
         // sum of the averages of 2d6 & 1d6 and 1d12
-        int num = (int) (Math.Round((dice1 + dice2) / 2.0, 0) + Math.Round((dice3 + dice4) / 2.0, 0));
+        int num = (int) (dice1 + dice2 + Math.Round((dice3 + dice4) / 2.0, 0));
         return num;
     }
 

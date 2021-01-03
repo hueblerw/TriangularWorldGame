@@ -15,6 +15,8 @@ public class Race {
     public string vision;
     public Dictionary<string, string> breedable;
 
+    private static Random randy = new Random();
+
     public Race(string name)
     {
         assignRace(name);
@@ -145,13 +147,34 @@ public class Race {
 
     public int randomAdultAge()
     {
-        Random randy = new Random();
         return (int) Math.Round(randy.NextDouble() * ((averageDeathAge + ageGroups["elder"]) / 2.0 - ageGroups["adult"]) + ageGroups["adult"], 0);
     }
 
     public bool isValidBreedable(Race parent1, Race parent2)
     {
         return parent1.breedable.ContainsKey(parent2.name);
+    }
+
+    public string getAgeGroup(int age)
+    {
+        if (age < ageGroups["child"])
+        {
+            return "infant";
+        }
+        else if (age >= ageGroups["elder"])
+        {
+            return "elder";
+        } else if (age >= ageGroups["adult"])
+        {
+            return "adult";
+        }
+        if (age >= ageGroups["teen"])
+        {
+            return "teen";
+        } else
+        {
+            return "child";
+        }
     }
 
     private void chooseRandomStat(int bonus)

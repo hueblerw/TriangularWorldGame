@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System;
+using UnityEngine;
 
 public class Person {
 
@@ -18,6 +19,8 @@ public class Person {
     public List<string> proficiencies;
     public Dictionary<string, int> skillBonuses;
 
+    private static System.Random randy = new System.Random();
+
     public Person(string name, string gender, string clan, string father, string mother, Race race, Culture culture, PersonClass personClass, Genes genes, int age, List<string> proficiencies, Dictionary<string, int> skillBonuses)
     {
         this.name = name;
@@ -29,15 +32,15 @@ public class Person {
         this.culture = culture;
         this.baseStats = new BaseStats();
         this.personClass = personClass;
+        this.genes = genes;
         this.age = age;
         this.proficiencies = proficiencies;
         this.skillBonuses = skillBonuses;
     }
 
-    public static Person newBorn(string name, Dictionary<string, Person> parents)
+    public static Person newBorn(string name, string gender, Dictionary<string, Person> parents)
     {
         Race race = racialInheritance(parents);
-        string gender = randomGender();
         Culture culture = culturalInheritance(parents);
         Genes genes = geneticInheritance(parents);
         PersonClass personClass = randomClass(culture);
@@ -46,10 +49,10 @@ public class Person {
         return new Person(name, gender, parents["father"].clan, parents["father"].name, parents["mother"].name, race, culture, personClass, genes, 1, proficiencies, skills);
     }
 
-    public static Person newImmigrant(string name, string clan, Dictionary<string, Person> parents, Culture culture)
+    public static Person newImmigrant(string name, string gender, string clan, Dictionary<string, Person> parents, Culture culture)
     {
         Race race = randomRace(culture);
-        string gender = randomGender();
+
         string father;
         string mother;
         if(parents.ContainsKey("father"))
@@ -64,7 +67,9 @@ public class Person {
         } else {
             mother = "unknown";
         }
+
         PersonClass personClass = randomClass(culture);
+
         Genes genes;
         if (parents.Count == 2)
         {
@@ -81,6 +86,7 @@ public class Person {
         {
             genes = new Genes(culture);
         }
+
         List<string> proficiencies = naturalProficiencies(race, personClass);
         Dictionary<string, int> skills = naturalSkills(race, personClass, culture);
         int age = race.randomAdultAge();
@@ -112,11 +118,13 @@ public class Person {
         return 0;
     }
 
-    // PRIVATES
-
-    private static string randomGender()
+    public string getAgeGroup()
     {
-        Random randy = new Random();
+        return race.getAgeGroup(age);
+    }
+
+    public static string randomGender()
+    {
         double num = randy.NextDouble();
         if (num > .5)
         {
@@ -126,6 +134,8 @@ public class Person {
             return "female";
         }
     }
+
+    // PRIVATES
 
     private static Dictionary<string, int> naturalSkills(Race race, PersonClass personClass, Culture culture)
     {
@@ -206,7 +216,7 @@ public class Person {
 
     public override string ToString()
     {
-        string output = name + " " + clan + " - " + age + " year old " + " " + gender + " " + culture.nationality + " " +  race.name + " " + personClass.className;
+        string output = name + " " + clan + " - " + age + " year old " + getAgeGroup() + " " + gender + " " + culture.nationality + " " +  race.name + " " + personClass.className;
         output += "\n" + baseStats;
         output += "\nSkill Bonuses:\t" + printDictionary(skillBonuses);
         return output;
