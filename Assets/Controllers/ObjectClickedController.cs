@@ -2,6 +2,9 @@
 
 public class ObjectClickedController : MonoBehaviour {
 
+    private const string TILE_INFO_TITLE = "Tile Info";
+    private const int SPACE_PER_LINE = 25;
+
     public WorldMapController worldMapController;
 
 	void Update ()
@@ -17,7 +20,12 @@ public class ObjectClickedController : MonoBehaviour {
             {
                 if (hit.collider != null)
                 {
-                    Debug.Log(worldMapController.world.getTileInfo(getCoordinates(hit.collider.gameObject.name)));
+                    MainDataController mainDataController = GameObject.Find("MainDataPanel").GetComponent<MainDataController>();
+                    string dataInfo = worldMapController.world.getTileInfo(getCoordinates(hit.collider.gameObject.name));
+                    mainDataController.titleText = TILE_INFO_TITLE;
+                    mainDataController.bodyText = dataInfo;
+                    mainDataController.textSize = SPACE_PER_LINE * countNumberOfLines(dataInfo);
+                    mainDataController.updateDisplay();
                 }
             }
         }
@@ -28,6 +36,11 @@ public class ObjectClickedController : MonoBehaviour {
         string[] data = gameObjectName.Split('-');
         string[] coors = data[0].Split(',');
         return new Vector2(float.Parse(coors[0]), float.Parse(coors[1]));
+    }
+
+    private int countNumberOfLines(string text)
+    {
+        return text.Split('\n').Length + 1;
     }
 
 }

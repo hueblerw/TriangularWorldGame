@@ -19,6 +19,7 @@ public class WorldMapController : MonoBehaviour {
         world = getWorld(false);
         // printWorld(world);
         gameObject.GetComponent<ObjectClickedController>().worldMapController = this;
+        WorldDateController.updateDate(world.worldDate);
         TrianglesView trianglesView = new TrianglesView(world, triangularTileImages, terrainImages, resourceImages);
         HexagonalView hexagonalView = new HexagonalView(world, hexNumberImages);
 	}

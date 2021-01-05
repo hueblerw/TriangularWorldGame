@@ -17,6 +17,7 @@ public class World {
     public List<Person> people;
     public List<Clan> clans;
     public List<Nation> nations;
+    public WorldDate worldDate;
 
     private LayerGenerator layerGenerator;
     private System.Random randy = new System.Random();
@@ -32,8 +33,10 @@ public class World {
             Debug.Log("Invalid world, generating a new one");
             generateWorld();
         }
+
         this.nations = new List<Nation>();
         this.nations.Add(createANation("Jerkland"));
+        this.worldDate = new WorldDate();
     }
 
     public void generateWorld()
