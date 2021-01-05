@@ -13,6 +13,11 @@ public class MainDataController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        updateDisplay();
+    }
+
+    public void updateDisplay()
+    {
         GameObject panel = GameObject.Find("MainDataPanel");
         GameObject title = GameObject.Find("MainDataTitle");
         GameObject body = GameObject.Find("MainDataText");
@@ -22,11 +27,6 @@ public class MainDataController : MonoBehaviour
         title.GetComponent<Text>().text = titleText;
         body.GetComponent<RectTransform>().sizeDelta = new Vector2(TEXTWIDTH, textSize - 50);
         body.GetComponent<Text>().text = bodyText;
-    }
-
-    public void updateDisplay()
-    {
-        Start();
     }
 
 }
