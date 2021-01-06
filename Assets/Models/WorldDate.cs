@@ -29,18 +29,10 @@ public class WorldDate
         {
             day = 1;
             year++;
-            // perform yearly tasks
-            // perform weekly tasks
         } else
         {
-            if ((day) % 5 == 0)
-            {
-                // perform weekly tasks
-            }
             day++;
         }
-
-        // perform daily tasks
     }
 
 }
